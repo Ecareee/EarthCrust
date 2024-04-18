@@ -1,0 +1,29 @@
+{
+  "required": true,
+  "package": "github.kasuminova.stellarcore.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "minVersion": "0.8",
+  "plugin": "github.kasuminova.stellarcore.mixin.MixinPlugin",
+  "mixins": [
+    "bloodmagic.MixinBloodAltar",
+    "botania.MixinCosmeticAttachRecipe",
+    "botania.MixinCosmeticRemoveRecipe",
+    "botania.MixinEntityManaSpark",
+    "cfm.MixinFurnitureBlock",
+    "cucumber.MixinTileEntityHelper",
+    "draconicevolution.MixinTileFusionCraftingInjector",
+    "draconicevolution.MixinTileFusionCraftingCore",
+    "immersiveengineering.MixinIEEntityBlock",
+    "immersiveengineering.MixinJerrycanRefillRecipe",
+    "legendarytooltips.MixinTooltipDecor",
+    "minecraft.chunk.MixinLevelChunk",
+    "minecraft.nnlist.MixinNonNullList",
+    "minecraft.world.MixinLevel"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "earthcrust-refmap.json"
+}

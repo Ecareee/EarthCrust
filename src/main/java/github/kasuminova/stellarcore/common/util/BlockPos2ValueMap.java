@@ -3,7 +3,7 @@ package github.kasuminova.stellarcore.common.util;
 import com.google.common.collect.Iterators;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -27,7 +27,7 @@ public class BlockPos2ValueMap<V> implements Map<BlockPos, V> {
     @Override
     public boolean containsKey(final Object key) {
         if (key instanceof BlockPos pos) {
-            return internal.containsKey(pos.toLong());
+            return internal.containsKey(pos.asLong());
         }
         return false;
     }
@@ -40,27 +40,27 @@ public class BlockPos2ValueMap<V> implements Map<BlockPos, V> {
     @Override
     public V get(final Object key) {
         if (key instanceof BlockPos pos) {
-            return internal.get(pos.toLong());
+            return internal.get(pos.asLong());
         }
         return null;
     }
 
     @Override
     public V put(final BlockPos key, final V value) {
-        return internal.put(key.toLong(), value);
+        return internal.put(key.asLong(), value);
     }
 
     @Override
     public V remove(final Object key) {
         if (key instanceof BlockPos pos) {
-            return internal.remove(pos.toLong());
+            return internal.remove(pos.asLong());
         }
         return null;
     }
 
     @Override
     public void putAll(final Map<? extends BlockPos, ? extends V> map) {
-        map.forEach((k, v) -> internal.put(k.toLong(), v));
+        map.forEach((k, v) -> internal.put(k.asLong(), v));
     }
 
     @Override
@@ -71,7 +71,7 @@ public class BlockPos2ValueMap<V> implements Map<BlockPos, V> {
     @Nonnull
     @Override
     public Set<BlockPos> keySet() {
-        return internal.keySet().stream().map(BlockPos::fromLong).collect(Collectors.toSet());
+        return internal.keySet().stream().map(BlockPos::of).collect(Collectors.toSet());
     }
 
     @Nonnull
@@ -126,7 +126,7 @@ public class BlockPos2ValueMap<V> implements Map<BlockPos, V> {
 
         @Override
         public BlockPos getKey() {
-            return BlockPos.fromLong(parent.getLongKey());
+            return BlockPos.of(parent.getLongKey());
         }
 
         @Override

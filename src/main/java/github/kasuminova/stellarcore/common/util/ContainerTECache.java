@@ -1,8 +1,8 @@
 package github.kasuminova.stellarcore.common.util;
 
 import github.kasuminova.stellarcore.StellarCore;
-import net.minecraft.inventory.Container;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -12,21 +12,21 @@ import java.util.stream.Collectors;
 
 public class ContainerTECache {
 
-    private static final Map<Class<? extends Container>, Function<Container, List<TileEntity>>> CACHE = new ConcurrentHashMap<>();
+    private static final Map<Class<? extends AbstractContainerMenu>, Function<AbstractContainerMenu, List<BlockEntity>>> CACHE = new ConcurrentHashMap<>();
 
-    public static List<TileEntity> getTileEntityList(final Container container) {
-        Function<Container, List<TileEntity>> func = CACHE.get(container.getClass());
+    public static List<BlockEntity> getTileEntityList(final AbstractContainerMenu container) {
+        Function<AbstractContainerMenu, List<BlockEntity>> func = CACHE.get(container.getClass());
         return func == null ? register(container.getClass()).apply(container) : func.apply(container);
     }
 
-    public static Function<Container, List<TileEntity>> register(final Class<? extends Container> cClass) {
+    public static Function<AbstractContainerMenu, List<BlockEntity>> register(final Class<? extends AbstractContainerMenu> cClass) {
         List<Field> availableFields = scanTileEntityField(cClass);
-        Function<Container, List<TileEntity>> func = (container) -> {
+        Function<AbstractContainerMenu, List<BlockEntity>> func = (container) -> {
             if (container == null) {
                 return Collections.emptyList();
             }
             return availableFields.stream()
-                    .map(field -> safeGetField(container, field, TileEntity.class))
+                    .map(field -> safeGetField(container, field, BlockEntity.class))
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
         };
@@ -42,13 +42,13 @@ public class ContainerTECache {
                 return type.cast(obj);
             }
         } catch (Error | Exception e) {
-            StellarCore.log.warn(e);
+            StellarCore.LOGGER.warn(e);
         }
         return null;
     }
 
-    public static List<Field> scanTileEntityField(final Class<? extends Container> containerClass) {
-        return scanTileEntityFieldRecursive(containerClass, TileEntity.class);
+    public static List<Field> scanTileEntityField(final Class<? extends AbstractContainerMenu> containerClass) {
+        return scanTileEntityFieldRecursive(containerClass, BlockEntity.class);
     }
 
     private static List<Field> scanTileEntityFieldRecursive(Class<?> aClass, Class<?> target) {

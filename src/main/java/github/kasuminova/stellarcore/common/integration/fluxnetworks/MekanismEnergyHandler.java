@@ -1,44 +1,57 @@
 package github.kasuminova.stellarcore.common.integration.fluxnetworks;
 
-import mekanism.api.energy.IStrictEnergyAcceptor;
-import mekanism.api.energy.IStrictEnergyOutputter;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
-import sonar.fluxnetworks.api.energy.ITileEnergyHandler;
+import mekanism.api.Action;
+import mekanism.api.energy.ISidedStrictEnergyHandler;
+import mekanism.api.math.FloatingLong;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.common.capabilities.Capability;
+import org.jetbrains.annotations.NotNull;
+import sonar.fluxnetworks.api.energy.IBlockEnergyBridge;
 
 import javax.annotation.Nonnull;
 
-public class MekanismEnergyHandler implements ITileEnergyHandler {
+public class MekanismEnergyHandler implements IBlockEnergyBridge {
 
     public static final MekanismEnergyHandler INSTANCE = new MekanismEnergyHandler();
 
+    public static Capability<ISidedStrictEnergyHandler> ENERGY_HANDLER_CAPABILITY;
+
     @Override
-    public boolean hasCapability(@Nonnull final TileEntity te, final EnumFacing facing) {
-        return canAddEnergy(te, facing) || canRemoveEnergy(te, facing);
+    public boolean hasCapability(@Nonnull final BlockEntity te, final @NotNull Direction dir) {
+        return canAddEnergy(te, dir) || canRemoveEnergy(te, dir);
     }
 
     @Override
-    public boolean canAddEnergy(@Nonnull final TileEntity te, final EnumFacing facing) {
-        return te instanceof IStrictEnergyAcceptor acceptor && acceptor.canReceiveEnergy(facing);
+    public boolean canAddEnergy(@Nonnull final BlockEntity te, final @NotNull Direction dir) {
+//        return te instanceof ISidedStrictEnergyHandler acceptor && acceptor.canReceiveEnergy(dir);
+        return te instanceof ISidedStrictEnergyHandler &&
+                te.getCapability(ENERGY_HANDLER_CAPABILITY, dir)
+                        .map(handler -> !handler.insertEnergy(FloatingLong.ZERO, dir, Action.SIMULATE).isZero())
+                        .orElse(false);
     }
 
     @Override
-    public boolean canRemoveEnergy(@Nonnull final TileEntity te, final EnumFacing facing) {
-        return te instanceof IStrictEnergyOutputter outputter && outputter.canOutputEnergy(facing);
+    public boolean canRemoveEnergy(@Nonnull final BlockEntity te, final @NotNull Direction dir) {
+//        return te instanceof ISidedStrictEnergyHandler outputter && outputter.canOutputEnergy(dir);
+        return te instanceof ISidedStrictEnergyHandler &&
+                te.getCapability(ENERGY_HANDLER_CAPABILITY, dir)
+                        .map(handler -> !handler.extractEnergy(FloatingLong.ZERO, dir, Action.SIMULATE).isZero())
+                        .orElse(false);
     }
 
     @Override
-    public long addEnergy(final long amount, @Nonnull final TileEntity te, final EnumFacing facing, final boolean simulate) {
-        if (te instanceof IStrictEnergyAcceptor acceptor) {
-            return (long) Math.ceil(acceptor.acceptEnergy(facing, ((double) amount) * 2.5D, simulate) / 2.5D);
+    public long addEnergy(final long amount, @Nonnull final BlockEntity te, final @NotNull Direction dir, final boolean simulate) {
+        if (te instanceof ISidedStrictEnergyHandler handler) {
+            return (long) Math.ceil(handler.insertEnergy(FloatingLong.create(((double) amount) * 2.5D), dir, simulate ? Action.SIMULATE : Action.EXECUTE).divide(2.5D).longValue());
         }
         return 0;
     }
 
     @Override
-    public long removeEnergy(final long amount, @Nonnull final TileEntity te, final EnumFacing facing) {
-        if (te instanceof IStrictEnergyOutputter outputter) {
-            return (long) Math.ceil(outputter.pullEnergy(facing, ((double) amount) * 2.5D, false) / 2.5D);
+    public long removeEnergy(final long amount, @Nonnull final BlockEntity te, final @NotNull Direction dir, final boolean simulate) {
+        if (te instanceof ISidedStrictEnergyHandler handler) {
+            return (long) Math.ceil(handler.extractEnergy(FloatingLong.create(((double) amount) * 2.5D), dir, simulate ? Action.SIMULATE : Action.EXECUTE).divide(2.5D).longValue());
         }
         return 0;
     }

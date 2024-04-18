@@ -1,56 +1,41 @@
 package github.kasuminova.stellarcore;
 
-import github.kasuminova.stellarcore.common.CommonProxy;
+import github.kasuminova.stellarcore.common.bugfix.TileEntityContainerFixes;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.integration.fluxnetworks.IntegrationsFluxNetworks;
+import me.shedaniel.autoconfig.AutoConfig;
+import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
+import net.minecraftforge.client.ConfigGuiHandler;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.*;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = StellarCore.MOD_ID, name = StellarCore.MOD_NAME, version = StellarCore.VERSION,
-        dependencies = "required-after:forge@[14.23.5.2847,);" +
-                "required-after:configanytime@[2.0,);",
-        acceptedMinecraftVersions = "[1.12, 1.13)"
-)
-@SuppressWarnings("MethodMayBeStatic")
+@Mod(StellarCore.MOD_ID)
 public class StellarCore {
-    public static final String MOD_ID = "stellar_core";
-    public static final String MOD_NAME = "Stellar Core";
+    public static final String MOD_ID = "earthcrust";
+    public static final Logger LOGGER = LogManager.getLogger();
+    public static StellarCoreConfig CONFIG = new StellarCoreConfig();
 
-    public static final String VERSION = Tags.VERSION;
-
-    public static final String CLIENT_PROXY = "github.kasuminova.stellarcore.client.ClientProxy";
-    public static final String COMMON_PROXY = "github.kasuminova.stellarcore.common.CommonProxy";
-
-    @Mod.Instance(MOD_ID)
-    public static StellarCore instance = null;
-    @SidedProxy(clientSide = CLIENT_PROXY, serverSide = COMMON_PROXY)
-    public static CommonProxy proxy = null;
-    public static Logger log = null;
-
-    @Mod.EventHandler
-    public void construction(FMLConstructionEvent event) {
-        proxy.construction();
+    public StellarCore() {
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::init);
     }
 
-    @Mod.EventHandler
-    public void preInit(FMLPreInitializationEvent event) {
-        event.getModMetadata().version = VERSION;
-        log = event.getModLog();
-        proxy.preInit();
-    }
+    private void init(final FMLCommonSetupEvent event) {
+        AutoConfig.register(StellarCoreConfig.class, GsonConfigSerializer::new);
+        CONFIG = AutoConfig.getConfigHolder(StellarCoreConfig.class).getConfig();
+        ModLoadingContext.get().registerExtensionPoint(ConfigGuiHandler.ConfigGuiFactory.class, () ->
+                new ConfigGuiHandler.ConfigGuiFactory((mc, parent) -> AutoConfig.getConfigScreen(StellarCoreConfig.class, parent).get())
+        );
 
-    @Mod.EventHandler
-    public void init(FMLInitializationEvent event) {
-        proxy.init();
-    }
+        if (ModList.get().isLoaded("fluxnetworks") && ModList.get().isLoaded("mekanism")) {
+            IntegrationsFluxNetworks.initMekanismIntegration();
+        }
 
-    @Mod.EventHandler
-    public void postInit(FMLPostInitializationEvent event) {
-        proxy.postInit();
-    }
-
-    @Mod.EventHandler
-    public void loadComplete(FMLLoadCompleteEvent event) {
-        proxy.loadComplete();
+        MinecraftForge.EVENT_BUS.register(TileEntityContainerFixes.INSTANCE);
     }
 }

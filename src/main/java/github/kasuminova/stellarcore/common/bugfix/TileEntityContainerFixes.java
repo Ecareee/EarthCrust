@@ -1,20 +1,20 @@
 package github.kasuminova.stellarcore.common.bugfix;
 
 import github.kasuminova.stellarcore.StellarCore;
-import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.ContainerTECache;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.Container;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.relauncher.Side;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
 import java.util.List;
 
+@Mod.EventBusSubscriber(modid = StellarCore.MOD_ID)
 @SuppressWarnings("MethodMayBeStatic")
 public class TileEntityContainerFixes {
 
@@ -23,31 +23,31 @@ public class TileEntityContainerFixes {
     @SubscribeEvent
     @SuppressWarnings("ConstantValue")
     public void onPlayerTick(final TickEvent.PlayerTickEvent event) {
-        if (!StellarCoreConfig.BUG_FIXES.container.containerTileEntityFixes) {
+        if (!StellarCore.CONFIG.BUG_FIXES.container.containerTileEntityFixes) {
             return;
         }
-        if (event.side != Side.SERVER) {
+        if (event.type != TickEvent.Type.SERVER) {
             return;
         }
         if (event.phase != TickEvent.Phase.START) {
             return;
         }
 
-        EntityPlayer player = event.player;
-        Container current = player.openContainer;
+        Player player = event.player;
+        AbstractContainerMenu current = player.containerMenu;
         if (current == null) {
             return;
         }
 
-        List<TileEntity> teList = ContainerTECache.getTileEntityList(current);
-        for (final TileEntity te : teList) {
-            BlockPos pos = te.getPos();
-            World world = te.getWorld();
-            if (te.isInvalid() || (world != null && !world.isBlockLoaded(pos))) {
-                player.closeScreen();
-                StellarCore.log.warn(String.format(
+        List<BlockEntity> teList = ContainerTECache.getTileEntityList(current);
+        for (final BlockEntity te : teList) {
+            BlockPos pos = te.getBlockPos();
+            Level world = te.getLevel();
+            if (te.isRemoved() || (world != null && !world.isLoaded(pos))) {
+                player.closeContainer();
+                StellarCore.LOGGER.warn(String.format(
                         "Detected invalid TileEntity GUI, World: %s, Pos: %s, GUI Class: %s, TileEntity Class: %s",
-                        world == null ? "null" : world.getWorldInfo().getWorldName(),
+                        world == null ? "null" : world.dimension().location().toString(),
                         posToString(pos),
                         current.getClass().getName(),
                         te.getClass().getName()

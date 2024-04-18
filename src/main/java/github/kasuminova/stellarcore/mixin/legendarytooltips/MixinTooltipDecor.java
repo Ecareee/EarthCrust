@@ -1,8 +1,11 @@
 package github.kasuminova.stellarcore.mixin.legendarytooltips;
 
 import com.anthonyhilyard.legendarytooltips.render.TooltipDecor;
-import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
-import net.minecraft.client.gui.FontRenderer;
+import github.kasuminova.stellarcore.StellarCore;
+import net.minecraft.client.gui.Font;
+import net.minecraft.locale.Language;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.util.FormattedCharSequence;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -19,15 +22,15 @@ public class MixinTooltipDecor {
     @Redirect(method = "drawBorder",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/FontRenderer;listFormattedStringToWidth(Ljava/lang/String;I)Ljava/util/List;",
+                    target = "Lnet/minecraft/client/gui/Font;split(Lnet/minecraft/network/chat/FormattedText;I)Ljava/util/List;",
                     remap = true
             ),
             remap = false)
-    private static List<String> redirectDrawBorderListFormattedStringToWidth(final FontRenderer instance, final String str, final int wrapWidth) {
-        if (!StellarCoreConfig.FEATURES.legendaryTooltips.tooltipDecor) {
-            return instance.listFormattedStringToWidth(str, wrapWidth);
+    private static List<FormattedCharSequence> redirectDrawBorderSplit(final Font instance, final FormattedText text, final int wrapWidth) {
+        if (!StellarCore.CONFIG.FEATURES.legendaryTooltips.tooltipDecor) {
+            return instance.split(text, wrapWidth);
         }
-        return Collections.singletonList(str);
+        return Collections.singletonList(Language.getInstance().getVisualOrder(text));
     }
 
 }

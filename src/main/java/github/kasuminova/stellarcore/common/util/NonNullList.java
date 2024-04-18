@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public class NonNullList<E> extends net.minecraft.util.NonNullList<E> {
+public class NonNullList<E> extends net.minecraft.core.NonNullList<E> {
 
     public NonNullList() {
         this(new ObjectArrayList<>(), null);

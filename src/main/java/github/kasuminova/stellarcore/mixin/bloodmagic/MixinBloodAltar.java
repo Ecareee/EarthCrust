@@ -1,40 +1,40 @@
 package github.kasuminova.stellarcore.mixin.bloodmagic;
 
-import WayofTime.bloodmagic.altar.BloodAltar;
-import WayofTime.bloodmagic.tile.TileAltar;
-import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.player.EntityPlayerMP;
+import github.kasuminova.stellarcore.StellarCore;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import wayoftime.bloodmagic.altar.BloodAltar;
+import wayoftime.bloodmagic.common.tile.TileAltar;
 
 @Mixin(BloodAltar.class)
 public class MixinBloodAltar {
 
     @Shadow(remap = false) private TileAltar tileAltar;
 
-    private static void sendUpdatePacketToNearPlayers(final TileAltar altar, final World world, final BlockPos blockPos) {
-        MinecraftServer server = world.getMinecraftServer();
+    private static void sendUpdatePacketToNearPlayers(final TileAltar altar, final Level world, final BlockPos blockPos) {
+        MinecraftServer server = world.getServer();
         if (server == null) {
             return;
         }
 
-        server.addScheduledTask(() -> {
-            if (altar.isInvalid()) {
+        server.execute(() -> {
+            if (altar.isRemoved()) {
                 return;
             }
-            for (EntityPlayerMP player : server.getPlayerList().getPlayers()) {
-                if (player.world != world) {
+            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                if (player.level != world) {
                     continue;
                 }
-                double distance = player.getPosition().getDistance(blockPos.getX(), blockPos.getY(), blockPos.getZ());
-                if (distance <= 32) {
-                    player.connection.sendPacket(altar.getUpdatePacket());
+                double distance = player.blockPosition().distSqr(blockPos);
+                if (altar.getUpdatePacket() != null && distance <= 1024) { // 32²
+                    player.connection.send(altar.getUpdatePacket());
                 }
             }
         });
@@ -43,12 +43,12 @@ public class MixinBloodAltar {
     @Redirect(method = "startCycle",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/World;notifyBlockUpdate(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/state/IBlockState;Lnet/minecraft/block/state/IBlockState;I)V",
+                    target = "Lnet/minecraft/world/level/Level;sendBlockUpdated(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;I)V",
                     remap = true),
             remap = false)
-    public void onStartCycleNotifyUpdate(final World world, final BlockPos blockPos, final IBlockState pos, final IBlockState oldState, final int newState) {
-        if (!StellarCoreConfig.PERFORMANCE.bloodMagic.bloodAltar) {
-            world.notifyBlockUpdate(blockPos, pos, oldState, newState);
+    public void onStartCycleNotifyUpdate(final Level world, final BlockPos blockPos, final BlockState pos, final BlockState oldState, final int newState) {
+        if (!StellarCore.CONFIG.PERFORMANCE.bloodMagic.bloodAltar) {
+            world.sendBlockUpdated(blockPos, pos, oldState, newState);
             return;
         }
         sendUpdatePacketToNearPlayers(tileAltar, world, blockPos);
@@ -57,12 +57,12 @@ public class MixinBloodAltar {
     @Redirect(method = "update",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/World;notifyBlockUpdate(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/state/IBlockState;Lnet/minecraft/block/state/IBlockState;I)V",
+                    target = "Lnet/minecraft/world/level/Level;sendBlockUpdated(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;I)V",
                     remap = true),
             remap = false)
-    public void onUpdateNotifyUpdate(final World world, final BlockPos blockPos, final IBlockState pos, final IBlockState oldState, final int newState) {
-        if (!StellarCoreConfig.PERFORMANCE.bloodMagic.bloodAltar) {
-            world.notifyBlockUpdate(blockPos, pos, oldState, newState);
+    public void onUpdateNotifyUpdate(final Level world, final BlockPos blockPos, final BlockState pos, final BlockState oldState, final int newState) {
+        if (!StellarCore.CONFIG.PERFORMANCE.bloodMagic.bloodAltar) {
+            world.sendBlockUpdated(blockPos, pos, oldState, newState);
             return;
         }
         sendUpdatePacketToNearPlayers(tileAltar, world, blockPos);
@@ -71,12 +71,12 @@ public class MixinBloodAltar {
     @Redirect(method = "updateAltar",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/World;notifyBlockUpdate(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/state/IBlockState;Lnet/minecraft/block/state/IBlockState;I)V",
+                    target = "Lnet/minecraft/world/level/Level;sendBlockUpdated(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;I)V",
                     remap = true),
             remap = false)
-    public void onUpdateAltarCycleNotifyUpdate(final World world, final BlockPos blockPos, final IBlockState pos, final IBlockState oldState, final int newState) {
-        if (!StellarCoreConfig.PERFORMANCE.bloodMagic.bloodAltar) {
-            world.notifyBlockUpdate(blockPos, pos, oldState, newState);
+    public void onUpdateAltarCycleNotifyUpdate(final Level world, final BlockPos blockPos, final BlockState pos, final BlockState oldState, final int newState) {
+        if (!StellarCore.CONFIG.PERFORMANCE.bloodMagic.bloodAltar) {
+            world.sendBlockUpdated(blockPos, pos, oldState, newState);
             return;
         }
         sendUpdatePacketToNearPlayers(tileAltar, world, blockPos);

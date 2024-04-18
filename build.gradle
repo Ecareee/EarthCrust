@@ -1,0 +1,214 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net' }
+        maven { url = 'https://repo.spongepowered.org/maven' }
+        maven { url = 'https://maven.parchmentmc.org' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '[6.0,6.2)', changing: true
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+        classpath 'org.parchmentmc:librarian:1.+'
+    }
+}
+plugins {
+    id 'eclipse'
+    id 'maven-publish'
+}
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'org.parchmentmc.librarian.forgegradle'
+
+version = mod_version + "-mc" + minecraft_version
+group = mod_group
+archivesBaseName = mod_name
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
+minecraft {
+//    mappings channel: 'official', version: "${minecraft_version}"
+    mappings channel: 'parchment', version: "2022.11.06-${minecraft_version}"
+
+    // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg') // Currently, this location cannot be changed from the default.
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'REGISTRIES'
+
+            property 'forge.logging.console.level', 'debug'
+
+            property 'forge.enabledGameTestNamespaces', "${mod_id}"
+
+            mods {
+                mod_id {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'REGISTRIES'
+
+            property 'forge.logging.console.level', 'debug'
+
+            property 'forge.enabledGameTestNamespaces', "${mod_id}"
+
+            mods {
+                mod_id {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        gameTestServer {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'REGISTRIES'
+
+            property 'forge.logging.console.level', 'debug'
+
+            property 'forge.enabledGameTestNamespaces', "${mod_id}"
+
+            mods {
+                mod_id {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        data {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'REGISTRIES'
+
+            property 'forge.logging.console.level', 'debug'
+
+            args '--mod', "${mod_id}", '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+
+            mods {
+                mod_id {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+repositories {
+    maven { url = "https://www.cursemaven.com" }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5"))
+    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.3.5")) {
+        jarJar.ranged(it, "[0.3.5,)")
+    }
+
+    implementation(fg.deobf("curse.maven:the-one-probe-245211:3965688")) // 1.18-5.1.2
+    implementation(fg.deobf("curse.maven:CodeChickenLib-242818:4607274")) // 1.18.2-4.1.4.488-universal
+//    compileOnly(rfg.deobf("curse.maven:nuclearcraft-overhauled-336895:3862197"))
+//    implementation files('libs/industrialcraft-2-2.9.108+ex118-1.18.2-forge.jar')
+    implementation(fg.deobf("curse.maven:mekanism-268560:3875976")) // 1.18.2-10.2.5.465
+    implementation(fg.deobf("curse.maven:cofh-core-69162:4801048")) // 1.18.2-9.2.3.47
+    implementation(fg.deobf("curse.maven:thermal-foundation-222880:4788649")) // 1.18.2-9.2.2.58
+    implementation(fg.deobf("curse.maven:thermal-innovation-291737:4759910")) // 1.18.2-9.2.1.19
+    implementation(fg.deobf("curse.maven:thermal-expansion-69163:4782927")) // 1.18.2-9.2.2.24
+    implementation(fg.deobf("curse.maven:curios-309927:4985315")) // forge-1.18.2-5.0.9.2
+    implementation(fg.deobf("curse.maven:botania-225643:3936568")) // 1.18.2-435
+    implementation(fg.deobf("curse.maven:immersive-engineering-231951:4412849")) // 1.18.2-8.4.0-161
+    implementation(fg.deobf("curse.maven:immersive-petroleum-268250:4818720")) // 1.18.2-4.2.0-25
+    implementation(fg.deobf("curse.maven:touhou-little-maid-355044:5246894")) // 1.18.2-release-1.1.8-hotfix2
+//    implementation(fg.deobf("curse.maven:ore-excavation-250898:3831679")) // 1.10.162
+    implementation(fg.deobf("curse.maven:terrablender-563928:3957976")) // Forge 1.18.2-1.2.0.126
+//    implementation(fg.deobf("curse.maven:biomes-o-plenty-220318:3827434")) // 1.18.2-16.0.0.134
+    implementation(fg.deobf("curse.maven:brandonscore-231382:4790968")) // 1.18.2-3.1.10.283
+    implementation(fg.deobf("curse.maven:draconicevolution-223565:4953547")) // 1.18.2-3.0.31.531-universal
+    implementation(fg.deobf("curse.maven:mantle-74924:5134546")) // 1.9.50 for 1.18.2
+    implementation(fg.deobf("curse.maven:tinkers-construct-74072:5148042")) // 3.7.1.155 for 1.18.2
+    implementation(fg.deobf("curse.maven:thermal-dynamics-227443:4760631")) // 1.18.2-9.2.2.19
+//    implementation(fg.deobf("curse.maven:armourers-workshop-229523:5243764")) // forge-1.18.2-2.1.2
+    implementation(fg.deobf("curse.maven:avaritia-1-10-261348:4406602")) // 1.18.2-4.0.1.6-universal
+    implementation(fg.deobf("curse.maven:patchouli-306770:3846086")) // 1.18.2-71.1
+    implementation(fg.deobf("curse.maven:blood-magic-224791:3953207")) // 1.18.2-3.2.6-41
+    implementation(fg.deobf("curse.maven:prism-lib-638111:3933410")) // 1.18.2-1.0.1
+    implementation(fg.deobf("curse.maven:iceberg-520110:4035917")) // 1.18.2-forge-1.0.49
+    implementation(fg.deobf("curse.maven:legendary-tooltips-532127:4035921")) // 1.18.2-1.3.1
+    implementation(fg.deobf("curse.maven:item-filters-309674:4553322")) // forge-1802.2.8-build.50
+    implementation(fg.deobf("curse.maven:architectury-api-419699:5137931")) // [Forge 1.18.2] v4.12.94
+    implementation(fg.deobf("curse.maven:ftb-library-forge-404465:4396792")) // forge-1802.3.11-build.177
+    implementation(fg.deobf("curse.maven:ftb-teams-forge-404468:4579981")) // forge-1802.2.11-build.107
+    implementation(fg.deobf("curse.maven:ftb-quests-forge-289412:4760361")) // 1802.3.15-build.298
+    implementation(fg.deobf("curse.maven:flux-networks-248020:4713885")) // 1.18.2-7.0.9
+    implementation(fg.deobf("curse.maven:supermartijn642s-config-lib-438332:4715404")) // 1.1.8 for Forge 1.18
+    implementation(fg.deobf("curse.maven:supermartijn642s-core-lib-454372:5102251")) // 1.1.17 for Forge 1.18
+    implementation(fg.deobf("curse.maven:fusion-connected-textures-854949:5129277")) // 1.1.1 for Forge 1.18
+//    implementation(fg.deobf("curse.maven:rechiseled-558998:4835960")) // 1.1.5b for Forge 1.18
+    implementation(fg.deobf("curse.maven:mrcrayfish-furniture-mod-55438:4374992")) // 7.0.0-pre35
+    implementation(fg.deobf("curse.maven:cucumber-272335:4831151")) // 1.18.2-5.1.5
+    implementation(fg.deobf("curse.maven:cloth-config-348521:4973439")) // [Forge 1.18.x] v6.5.116
+}
+
+processResources {
+    var replaceProperties = [
+            forge_version: forge_version, forge_version_range: forge_version_range,
+            loader_version_range: loader_version_range,
+            mod_id: mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
+            mod_authors: mod_authors, mod_description: mod_description, mod_repo: mod_repo
+    ]
+    inputs.properties replaceProperties
+
+    filesMatching(['META-INF/mods.toml']) {
+        expand replaceProperties + [project: project]
+    }
+}
+
+mixin {
+    add sourceSets.main, 'earthcrust-refmap.json'
+    config 'earthcrust.mixins.json'
+
+    debug.verbose = true
+    debug.export = true
+}
+
+jar {
+    manifest {
+        attributes([
+                "Specification-Title"     : mod_id,
+                "Specification-Vendor"    : mod_authors,
+                "Specification-Version"   : "1",
+                "Implementation-Title"    : mod_name,
+                "Implementation-Version"  : version,
+                "Implementation-Vendor"   : mod_authors,
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
+
+jar.finalizedBy('reobfJar')
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact jar
+        }
+    }
+    repositories {
+        maven {
+            url "file://${project.projectDir}/mcmodsrepo"
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

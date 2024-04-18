@@ -1,7 +1,7 @@
 package github.kasuminova.stellarcore.mixin.minecraft.nnlist;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraft.util.NonNullList;
+import net.minecraft.core.NonNullList;
 import org.apache.commons.lang3.Validate;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,7 +17,7 @@ import java.util.*;
 @Mixin(NonNullList.class)
 public abstract class MixinNonNullList extends AbstractList {
 
-    @Shadow @Final private List delegate;
+    @Shadow @Final private List list;
 
     @Inject(method = "create", at = @At("HEAD"), cancellable = true)
     private static void injectCreate(final CallbackInfoReturnable<NonNullList> cir) {
@@ -32,7 +32,7 @@ public abstract class MixinNonNullList extends AbstractList {
         cir.setReturnValue(new github.kasuminova.stellarcore.common.util.NonNullList(new ObjectArrayList(aobject), fill));
     }
 
-    @Inject(method = "from", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "of", at = @At("HEAD"), cancellable = true)
     private static void injectFrom(final Object defaultElementIn, final Object[] elements, final CallbackInfoReturnable<NonNullList> cir) {
         cir.setReturnValue(new github.kasuminova.stellarcore.common.util.NonNullList(new ObjectArrayList(elements), defaultElementIn));
     }
@@ -40,19 +40,19 @@ public abstract class MixinNonNullList extends AbstractList {
     @Nonnull
     @Override
     public Iterator iterator() {
-        return delegate.iterator();
+        return list.iterator();
     }
 
     @Nonnull
     @Override
     public ListIterator listIterator() {
-        return delegate.listIterator();
+        return list.listIterator();
     }
 
     @Nonnull
     @Override
     public ListIterator listIterator(final int index) {
-        return delegate.listIterator(index);
+        return list.listIterator(index);
     }
 
 }
